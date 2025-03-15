@@ -1,0 +1,46 @@
+{
+  "name": "micheldiemer/validator",
+  "description": "W3C VNU Html validator",
+  "type": "library",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Md\\Validator\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Michel Diemer",
+      "email": "michel.diemer@yahoo.fr"
+    }
+  ],
+  "minimum-stability": "beta",
+  "require": {
+    "php": ">=8.1",
+    "micheldiemer/mbstring": "^1"
+  },
+  "scripts": {
+    "fix": "PHP_CS_FIXER_IGNORE_ENV=1 php-cs-fixer fix",
+    "fixdry": "PHP_CS_FIXER_IGNORE_ENV=1 php-cs-fixer fix --dry-run --diff",
+    "lint": "phplint",
+    "phpstan": "phpstan",
+    "lint2": [
+      "@lint",
+      "@phpstan"
+    ],
+    "full": [
+      "@lint",
+      "@phpstan",
+      "@fix"
+    ],
+    "phpdoc": [
+        "export COMPOSER_PROCESS_TIMEOUT=9000",
+        "@phpdoc-run",
+        "@phpdoc-fix"
+    ],
+    "gethome": "echo $(composer config home)",
+    "phpdoc-run": "phpdoc -v",
+    "phpdoc-fix": "php $(composer config home)/vendor/automattic/phpdoc-markdown/bin/html-to-md.php",
+    "test": "echo 'No tests yet'"
+  }
+}

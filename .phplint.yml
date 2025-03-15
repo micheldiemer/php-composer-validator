@@ -1,0 +1,5 @@
+path: .
+exclude: ["vendor/"]
+extensions: ["php"]
+memory_limit: 4G
+warning: true
