@@ -3,5 +3,4 @@
 .php-cs-fixer.cache
 .phplint.cache/
 .phpdoc/
-.phive/
-phive.phar.asc
+tools/

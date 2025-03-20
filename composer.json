@@ -20,10 +20,12 @@
     "micheldiemer/mbstring": "^1"
   },
   "scripts": {
-    "fix": "PHP_CS_FIXER_IGNORE_ENV=1 php-cs-fixer fix",
-    "fixdry": "PHP_CS_FIXER_IGNORE_ENV=1 php-cs-fixer fix --dry-run --diff",
-    "lint": "phplint",
-    "phpstan": "phpstan",
+    "install_phive": "./.phive/install.sh",
+    "install_tools": "phive install",
+    "fix": "PHP_CS_FIXER_IGNORE_ENV=1 ./tools/php-cs-fixer fix",
+    "fixdry": "PHP_CS_FIXER_IGNORE_ENV=1 ./tools/php-cs-fixer fix --dry-run --diff",
+    "lint": "./tools/phplint",
+    "phpstan": "./tools/phpstan",
     "lint2": [
       "@lint",
       "@phpstan"
@@ -39,7 +41,7 @@
         "@phpdoc-fix"
     ],
     "gethome": "echo $(composer config home)",
-    "phpdoc-run": "phpdoc -v",
+    "phpdoc-run": "./tools/phpdocumentor -v",
     "phpdoc-fix": "php $(composer config home)/vendor/automattic/phpdoc-markdown/bin/html-to-md.php",
     "test": "echo 'No tests yet'"
   }
