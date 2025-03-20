@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phive xmlns="https://phar.io/phive">
+  <phar name="phpunit" version="^12.0.9" installed="12.0.9" location="./tools/phpunit" copy="false"/>
+  <phar name="php-cs-fixer" version="^3.73.1" installed="3.73.1" location="./tools/php-cs-fixer" copy="false"/>
+  <phar name="phpstan" version="^2.1.8" installed="2.1.8" location="./tools/phpstan" copy="false"/>
+  <phar name="overtrue/phplint" version="^9.5.6" installed="9.5.6" location="./tools/phplint" copy="false"/>
+  <phar name="phpdocumentor" version="^3.7.1" installed="3.7.1" location="./tools/phpdocumentor" copy="false"/>
+</phive>
