@@ -35,12 +35,16 @@ class VNUValidator implements IValidator
     }
     public function validateLocalUrl(string $localUrl, string $validatorUrl = '')
     {
+
+
         if ($validatorUrl === '') {
             $validatorUrl = self::$VNU_lan_url;
         }
+
         # Vérification de l’adresse locale
         $encodedLocalUrl = urlencode(trim($localUrl));
-        $url_data_res = fopen($encodedLocalUrl, 'r');
+
+        $url_data_res = fopen($localUrl, 'r');
         if ($url_data_res === false):
             return ['httpCode' => 404, 'rawdata' => null, 'json' => ['error' => "fopen $localUrl"]];
         endif;

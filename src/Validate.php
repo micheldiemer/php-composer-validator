@@ -103,44 +103,66 @@ class Validate
 
         $localUrl = self::localPathToUrl($file, self::$filePath, self::$urlPath);
 
-        $validatorResult = $validator->validateUrl($localUrl);
+        $validatorResult = $validator->validateLocalUrl($localUrl);
 
         self::processValidatorResult($validatorResult, $file, $localUrl, $HtmlOrJsTemplate);
 
         return true;
     }
 
-    private static function processValidatorResult($validatorResult, \SplFileInfo $file, string $localUrl, string $HtmlOrJsTemplate = self::DEFAULT_HTML_TEMPLATE): void
+    private static function processValidatorResult($validatorResult, \SplFileInfo|null $file, string $localUrl, string $HtmlOrJsTemplate = self::DEFAULT_HTML_TEMPLATE): void
     {
         if (!mb_str_contains($HtmlOrJsTemplate, '{jsonEncodedData}')):
             throw new \Exception('HtmlOrJsTemplate must contain {jsonEncodedData}');
         endif;
 
         $url = $localUrl;
-        $data = $validatorResult;
-        foreach ($validatorResult as $k => $w3curlRet):
-            $data['httpCode'] = $w3curlRet['httpCode'];
-            $ok = $w3curlRet['httpCode'] == 200 && (($w3curlRet['rawdata'] ?? false) !== false);
-            $data['file'] = $k . ' ' . ($k == 'remote' ? mb_substr($file, mb_strlen(self::BASE_DOCKER_FILE_PATH) + 1) : mb_str_replace(self::$urlPath, self::$urlExternal, $url));
-            if (!$ok):
-                $data['message'] = 'W3CValidation null ' . ($w3curlRet['rawdata'] ?? '');
-                continue;
-            endif;
+        $data = [];
 
-            $w3cdata = $w3curlRet['json'];
+        $data['httpCode'] = $validatorResult['httpCode'];
 
-            /**
-             * @var W3C_NU_Message $message
-             */
-            foreach ($w3cdata->messages as $message):
-                $data[$message->type] ??= [];
-                $lc = isset($message->firstLine) && isset($message->firstColumn) ?
-                    $message->firstLine . ':' . $message->firstColumn . ' ' : '';
+        $ok = $validatorResult['httpCode'] == 200 && (($validatorResult['rawdata'] ?? false) !== false);
+        if (!is_null($file)):
+            $data['file'] = $file->getPath() . '/' . $file->getFileName();
+        else:
+            $data['file'] = __FILE__ . ':' . __LINE__;
+        endif;
+        if ($localUrl != ''):
+            $data['url'] = $localUrl;
+        else:
+            $data['url'] = $validatorResult['json']['url'];
+        endif;
 
-                $data[$message->type][] = $lc . ' ' . $message->message;
+        /*$k . ' ' . ($k == 'remote' ? mb_substr($file, mb_strlen(self::BASE_DOCKER_FILE_PATH) + 1) : mb_str_replace(self::$urlPath, self::$urlExternal, $url));*/
+        if (!$ok):
+            $data['message'] = 'W3CValidation null ' . ($w3curlRet['rawdata'] ?? '');
+        endif;
 
-                echo \mb_str_replace('{jsonEncodedData}', json_encode($data), $HtmlOrJsTemplate);
-            endforeach;
+        if (!\is_object($validatorResult['json'])):
+            $data['message'] = 'W3CValidation null ' . ($w3curlRet['rawdata'] ?? '');
+            return;
+        endif;
+
+        $w3cdata = $validatorResult['json'];
+
+        if (!\is_array($w3cdata->messages)):
+            $data['message'] = 'Aucun message ' . ($w3curlRet['rawdata'] ?? '');
+            return;
+        endif;
+
+
+
+        /**
+         * @var W3C_NU_Message $message
+         */
+        foreach ($w3cdata->messages as $message):
+            $data[$message->type] ??= [];
+            $lc = isset($message->firstLine) && isset($message->firstColumn) ?
+                $message->firstLine . ':' . $message->firstColumn . ' ' : '';
+
+            $data[$message->type][] = $lc . ' ' . $message->message;
+
+            echo \mb_str_replace('{jsonEncodedData}', json_encode($data), $HtmlOrJsTemplate);
         endforeach;
     }
 }
