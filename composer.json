@@ -43,6 +43,6 @@
     "gethome": "echo $(composer config home)",
     "phpdoc-run": "./tools/phpdocumentor -v",
     "phpdoc-fix": "php $(composer config home)/vendor/automattic/phpdoc-markdown/bin/html-to-md.php",
-    "test": "echo 'No tests yet'"
+    "test": "mkdir -p /var/cache/phpunit ; phpunit --display-deprecations --display-notices --display-warnings  --cache-directory=/var/cache/phpunit tests"
   }
 }

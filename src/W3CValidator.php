@@ -2,27 +2,31 @@
 
 namespace Md\Validator;
 
+use Md\Validator\HttpMethods;
+
 class W3CValidator implements IValidator
 {
-    public const W3C_URL = 'https://validator.nu?out=json';
+    public const W3C_URL_RAW = 'https://validator.nu';
+    public const W3C_URL = self::W3C_URL_RAW . '?out=json';
 
-    public function validateCode(string $code, string $contentType)
+    public function validatorIsAvailable(): bool
+    {
+        $r = HttpCurl::http_curl(self::W3C_URL_RAW, HttpMethods::HEAD);
+        return $r['httpCode'] === 200;
+    }
+
+    public function validateCode(string $code, string $contentType  = 'text/html; charset=utf-8')
     {
         $url = self::W3C_URL;
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_USERAGENT, 'cURL/' . PHP_VERSION);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: ' . $contentType]);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $code);
-        curl_setopt($ch, CURLOPT_FORBID_REUSE, true);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-        $rawdata = curl_exec($ch);
-        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        $r = HttpCurl::http_curl($url, HttpMethods::POST, $contentType, ['text' => $code]);
 
-        return ['W3C_url' => $url, 'httpCode' => $httpcode, 'rawdata' => $rawdata, 'json' => json_decode($rawdata)];
+        return [
+            'W3C_url' => $url,
+            'httpCode' => $r['httpCode'],
+            'rawdata' => $r['rawdata'],
+            'json' => json_decode($r['rawdata'])
+        ];
     }
 
 

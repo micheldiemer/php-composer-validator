@@ -2,6 +2,8 @@
 
 namespace Md\Validator;
 
+
+
 class VNUValidator implements IValidator
 {
     public const VNU_LAN_HOST = null;
@@ -9,9 +11,21 @@ class VNUValidator implements IValidator
     public const VNU_LAN_SECURE = false;
     public const VNU_LAN_PORT = 8888;
 
-    public static $VNU_lan_url = 'http://vnu:8888/?out=json';
+    public const VNU_LAN_DEFAULT_RAWURL = 'http://vnu:8888';
+    public const VNU_DEFAULT_PARAMS = 'out=json';
+    public static $VNU_lan_rawurl = self::VNU_LAN_DEFAULT_RAWURL;
+    public static $VNU_lan_params = self::VNU_DEFAULT_PARAMS;
+    public static $VNU_lan_url = self::VNU_LAN_DEFAULT_RAWURL .
+        '?' . self::VNU_DEFAULT_PARAMS;
 
-    public static function setValidatorUrl(string|null $fullUrl = null, string|null $host = self::VNU_LAN_HOST, string|null $hostName = self::VNU_LAN_HOST_NAME, int|null $port = self::VNU_LAN_PORT, $secure = self::VNU_LAN_SECURE): string
+
+    public function validatorIsAvailable(): bool
+    {
+        $r = HttpCurl::http_curl(self::$VNU_lan_rawurl, HttpMethods::HEAD);
+        return $r['httpCode'] === 200;
+    }
+
+    public static function setValidatorUrl(string|null $fullUrl = null, string|null $host = self::VNU_LAN_HOST, string|null $hostName = self::VNU_LAN_HOST_NAME, int|null $port = self::VNU_LAN_PORT, $secure = self::VNU_LAN_SECURE, string $params = self::VNU_DEFAULT_PARAMS): string
     {
         if (!is_null($fullUrl)) {
             self::$VNU_lan_url = $fullUrl;
@@ -20,68 +34,69 @@ class VNUValidator implements IValidator
         $_scheme = 'http' . ($secure ? 's' : '');
         $_host = (is_null($host)) ? gethostbyname($hostName) : $host;
         $_port = $port > 0 ? ":{$port}" : '';
-        self::$VNU_lan_url = $_scheme . '://' . $_host . ':' . $_port . '/?out=json';
+        self::$VNU_lan_rawurl = $_scheme . '://' . $_host . ':' . $_port;
+        self::$VNU_lan_params = $params;
+        self::$VNU_lan_url = self::$VNU_lan_rawurl . '?' . self::$VNU_lan_params;
         return self::$VNU_lan_url;
     }
 
-    public function validateCode(string $code, string $contentType)
+    public function validateCode(string $code, string $contentType  = 'text/html; charset=utf-8')
     {
-        throw new \Exception('Not implemented yet');
+        $url = "http://vnu:8888/?out=json";
+        //self::$VNU_lan_url;
+        echo $url . PHP_EOL;
+        $r = HttpCurl::http_curl($url, HttpMethods::POST, $contentType, ['text' => $code]);
+
+        return [
+            'local_url' => $url,
+            'httpCode' => $r['httpCode'],
+            'rawdata' => $r['rawdata'],
+            'json' => $r['json']
+        ];
     }
 
-    public function validateUrl(string $url)
+    public function validateUrl(string $urlToValidate)
     {
-        throw new \Exception('Not implemented yet');
-    }
-    public function validateLocalUrl(string $localUrl, string $validatorUrl = '')
-    {
-
-
-        if ($validatorUrl === '') {
-            $validatorUrl = self::$VNU_lan_url;
-        }
+        if (!$this->testUrl($urlToValidate, $result = []))
+            return $result;
 
         # Vérification de l’adresse locale
-        $encodedLocalUrl = urlencode(trim($localUrl));
-
-        $url_data_res = fopen($localUrl, 'r');
-        if ($url_data_res === false):
-            return ['httpCode' => 404, 'rawdata' => null, 'json' => ['error' => "fopen $localUrl"]];
-        endif;
-        fclose($url_data_res);
+        $encodedLocalUrl = urlencode(trim($urlToValidate));
 
         # Construction de l'URL
-        $url = $validatorUrl . '&doc=' . $encodedLocalUrl;
+        $url = self::$VNU_lan_url . '&doc=' . $encodedLocalUrl;
 
         # Interrogation du validateur avec curl
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_USERAGENT, 'cURL/' . PHP_VERSION);
-        //curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        //curl_setopt($ch, CURLOPT_POST, true);
-        //curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: ' . $type]);
-        //curl_setopt($ch, CURLOPT_POSTFIELDS, file_get_contents($file));
-        curl_setopt($ch, CURLOPT_FORBID_REUSE, true);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $rawdata = curl_exec($ch);
-        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        $r = HttpCurl::http_curl($url, HttpMethods::GET);
+        $rawdata = $r['rawdata'];
+        $httpcode = $r['httpCode'];
 
         if ($rawdata === false || $rawdata === '' || $httpcode === false):
             return ['httpCode' => $httpcode, 'rawdata' => null, 'json' => ['error' => "curl $url"]];
         endif;
 
-        try {
-            $data = json_decode($rawdata, null, 512, JSON_THROW_ON_ERROR);
-        } catch (\JsonException $e) {
-            $data = ['error' => $e->getMessage()];
-        }
+        return ['httpCode' => $httpcode, 'rawdata' => $rawdata, 'json' => $r['json']];
+    }
 
-        return ['httpCode' => $httpcode, 'rawdata' => $rawdata, 'json' => $data];
+    private function testUrl(string $url, array &$result): bool
+    {
+        $url_data_res = fopen($url, 'r');
+        if ($url_data_res === false):
+            $result = ['httpCode' => 404, 'rawdata' => null, 'json' => ['error' => "fopen $url"]];
+            return false;
+        endif;
+        fclose($url_data_res);
+        return true;
+    }
+
+
+    public function validateLocalUrl(string $localUrl)
+    {
+        return $this->validateUrl($localUrl);
     }
 
     public function validateRemoteUrl(string $remoteUrl)
     {
-        throw new \Exception('Not implemented yet');
+        return $this->validateUrl($remoteUrl);
     }
 }

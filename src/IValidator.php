@@ -8,4 +8,5 @@ interface IValidator
     public function validateUrl(string $url);
     public function validateLocalUrl(string $localUrl);
     public function validateRemoteUrl(string $remoteUrl);
+    public function validatorIsAvailable(): bool;
 }

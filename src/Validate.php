@@ -79,7 +79,7 @@ class Validate
     }
 
 
-    public static function code(string $code, string $contentType, IValidator $iValidator)
+    public static function code(IValidator $iValidator, string $code, string $contentType = "text/html; charset=utf-8"): array
     {
         $validatorResult = $iValidator->validateCode($code, $contentType);
         return $validatorResult;
