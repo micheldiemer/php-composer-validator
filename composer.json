@@ -22,10 +22,10 @@
   "scripts": {
     "install_phive": "./.phive/install.sh",
     "install_tools": "phive install",
-    "fix": "PHP_CS_FIXER_IGNORE_ENV=1 ./tools/php-cs-fixer fix",
-    "fixdry": "PHP_CS_FIXER_IGNORE_ENV=1 ./tools/php-cs-fixer fix --dry-run --diff",
-    "lint": "./tools/phplint",
-    "phpstan": "./tools/phpstan",
+    "fix": "PHP_CS_FIXER_IGNORE_ENV=1 php-cs-fixer fix",
+    "fixdry": "PHP_CS_FIXER_IGNORE_ENV=1 php-cs-fixer fix --dry-run --diff",
+    "lint": "phplint",
+    "phpstan": "phpstan",
     "lint2": [
       "@lint",
       "@phpstan"
@@ -41,7 +41,7 @@
         "@phpdoc-fix"
     ],
     "gethome": "echo $(composer config home)",
-    "phpdoc-run": "./tools/phpdocumentor -v",
+    "phpdoc-run": "phpdocumentor -v",
     "phpdoc-fix": "php $(composer config home)/vendor/automattic/phpdoc-markdown/bin/html-to-md.php",
     "test": "mkdir -p /var/cache/phpunit ; phpunit --display-deprecations --display-notices --display-warnings  --cache-directory=/var/cache/phpunit tests"
   }

@@ -71,11 +71,26 @@ class Validate
 
     public static function localPathToUrl(\SplFileInfo $file, $localPath, $urlPath): string|false
     {
+
         if (!file_exists($file)):
             return false;
         endif;
 
-        return mb_str_replace($localPath, $urlPath, $file->getPath() . '/' . $file->getFileName());
+
+        $fullPath = $file->getPath() . '/' . $file->getFileName();
+
+        if (!mb_str_starts_with($fullPath, $localPath)):
+            return false;
+        endif;
+        $filePart = mb_substr($fullPath, mb_strlen($localPath));
+
+        $parts = \preg_split('/[\/\\\\]/', $filePart);
+        $urlParts = [];
+        foreach ($parts as $k => $part):
+            $urlParts[] = rawurlencode($part);
+        endforeach;
+
+        return $urlPath . implode('/', $urlParts);
     }
 
 
@@ -87,6 +102,7 @@ class Validate
 
     public static function localFile(\SplFileInfo $file, IValidator $validator, array $exclusions = self::STANDARD_EXCLUDE, string $HtmlOrJsTemplate = self::DEFAULT_HTML_TEMPLATE): bool
     {
+
         if (self::exclude($file, $exclusions)):
             return false;
         endif;
@@ -103,7 +119,7 @@ class Validate
 
         $localUrl = self::localPathToUrl($file, self::$filePath, self::$urlPath);
 
-        $validatorResult = $validator->validateLocalUrl($localUrl);
+        $validatorResult = $validator->validateUrl($localUrl);
 
         self::processValidatorResult($validatorResult, $file, $localUrl, $HtmlOrJsTemplate);
 
@@ -116,8 +132,11 @@ class Validate
             throw new \Exception('HtmlOrJsTemplate must contain {jsonEncodedData}');
         endif;
 
+        $HtmlOrJsTemplate = mb_trim($HtmlOrJsTemplate);
+
         $url = $localUrl;
         $data = [];
+
 
         $data['httpCode'] = $validatorResult['httpCode'];
 
@@ -132,24 +151,36 @@ class Validate
         else:
             $data['url'] = $validatorResult['json']['url'];
         endif;
+        $data['url2'] = mb_str_replace(self::$urlPath, self::$urlExternal, $data['url']);
 
         /*$k . ' ' . ($k == 'remote' ? mb_substr($file, mb_strlen(self::BASE_DOCKER_FILE_PATH) + 1) : mb_str_replace(self::$urlPath, self::$urlExternal, $url));*/
+
         if (!$ok):
-            $data['message'] = 'W3CValidation null ' . ($w3curlRet['rawdata'] ?? '');
+            if (isset($validatorResult['error'])) {
+                $data['message'] = 'Erreur validation ' . $validatorResult['error'];
+            } else {
+                $data['message'] = 'W3CValidation not ok ' . ($w3curlRet['rawdata'] ?? '');
+            }
         endif;
 
-        if (!\is_object($validatorResult['json'])):
-            $data['message'] = 'W3CValidation null ' . ($w3curlRet['rawdata'] ?? '');
-            return;
+        if ($ok && !\is_object($validatorResult['json'])):
+            $data['message'] = 'W3CValidation no json ' . ($w3curlRet['rawdata'] ?? '');
+            $ok = false;
         endif;
 
         $w3cdata = $validatorResult['json'];
-
-        if (!\is_array($w3cdata->messages)):
-            $data['message'] = 'Aucun message ' . ($w3curlRet['rawdata'] ?? '');
-            return;
+        if ($ok && !\is_array($w3cdata->messages)):
+            $data['message'] = 'Messages pas un tableau ' . ($w3curlRet['rawdata'] ?? '');
+            $ok = false;
+        endif;
+        if ($ok && count($w3cdata->messages) === 0):
+            $data['message'] = 'Aucun message';
         endif;
 
+        if (!$ok) {
+            echo \mb_str_replace('{jsonEncodedData}', json_encode($data), $HtmlOrJsTemplate);
+            return;
+        }
 
 
         /**
@@ -161,8 +192,7 @@ class Validate
                 $message->firstLine . ':' . $message->firstColumn . ' ' : '';
 
             $data[$message->type][] = $lc . ' ' . $message->message;
-
-            echo \mb_str_replace('{jsonEncodedData}', json_encode($data), $HtmlOrJsTemplate);
         endforeach;
+        echo \mb_str_replace('{jsonEncodedData}', json_encode($data), $HtmlOrJsTemplate);
     }
 }

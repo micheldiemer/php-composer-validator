@@ -7,7 +7,7 @@ parameters:
   parallel:
     maximumNumberOfProcesses: 1
   excludePaths:
-    - vendor/
   dynamicConstantNames:
   universalObjectCratesClasses:
   bootstrapFiles:
+    - /home/michel/.local/bin/phpunit

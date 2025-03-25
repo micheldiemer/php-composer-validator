@@ -2,13 +2,11 @@
 
 namespace Md\Validator;
 
-
 class HttpCurl
 {
     private static function http_curl_get(&$ch)
     {
         curl_setopt($ch, CURLOPT_HTTPGET, true);
-        curl_setopt($ch, CURLOPT_NOBODY, true);
     }
 
     private static function http_curl_head(&$ch)
@@ -40,6 +38,12 @@ class HttpCurl
         }
     }
 
+    public static function http_curl_test($url): bool
+    {
+        $r = self::http_curl($url, HttpMethods::GET);
+        return $r['httpCode'] >= 200 && $r['httpCode'] <= 299;
+    }
+
     public static function http_curl($url, HttpMethods $method = HttpMethods::GET, $contentType = 'text/html; charset=utf-8', string|array $body = '', bool $w3c = true): array
     {
         $ch = curl_init();
@@ -48,12 +52,11 @@ class HttpCurl
             [
                 CURLOPT_URL => $url,
                 CURLOPT_USERAGENT => 'cURL/' . PHP_VERSION,
-                CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_MAXREDIRS => 10,
                 CURLOPT_TIMEOUT => 30,
                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                CURLOPT_CUSTOMREQUEST => $method->value,
+                // CURLOPT_CUSTOMREQUEST => $method->value,
                 CURLINFO_HEADER_OUT => true,
                 CURLOPT_FORBID_REUSE => true,
                 CURLOPT_RETURNTRANSFER => true,
@@ -61,7 +64,7 @@ class HttpCurl
         );
 
         if ($method === HttpMethods::POST) {
-            if ($w3c && strlen($body['text'] ?? '') > 0) {
+            if ($w3c === true && strlen($body['text'] ?? '') > 0) {
                 curl_setopt($ch, CURLOPT_POST, true);
                 curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: ' . $contentType]);
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $body['text']);
@@ -101,9 +104,13 @@ class HttpCurl
         $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
         curl_close($ch);
 
-        $json = str_contains($contentType, 'json')
-            ? json_decode($rawdata, null, 512, JSON_THROW_ON_ERROR)
-            : null;
+        $json = null;
+        if ($httpcode >= 200 && $httpcode <= 299) {
+            if (str_contains($contentType, 'json')) {
+                $json = json_decode($rawdata);
+                //$json = json_decode($rawdata, null, 512, JSON_THROW_ON_ERROR);
+            }
+        }
 
         return ['httpCode' => $httpcode, 'rawdata' => $rawdata, 'contentType' => $contentType, 'json' => $json];
     }
