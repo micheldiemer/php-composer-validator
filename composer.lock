@@ -8,16 +8,16 @@
     "packages": [
         {
             "name": "micheldiemer/mbstring",
-            "version": "1.0.0-beta1",
+            "version": "1.0.0-beta4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/micheldiemer/php-composer-mbstring.git",
-                "reference": "3995fab275b6134a82850aee6da0ac5fd930564e"
+                "reference": "33525dd1b600e8159d8c2cb100966bd64123ac73"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/micheldiemer/php-composer-mbstring/zipball/3995fab275b6134a82850aee6da0ac5fd930564e",
-                "reference": "3995fab275b6134a82850aee6da0ac5fd930564e",
+                "url": "https://api.github.com/repos/micheldiemer/php-composer-mbstring/zipball/33525dd1b600e8159d8c2cb100966bd64123ac73",
+                "reference": "33525dd1b600e8159d8c2cb100966bd64123ac73",
                 "shasum": ""
             },
             "require": {
@@ -43,9 +43,9 @@
             "description": "Complementary functions for the mbstring extension",
             "support": {
                 "issues": "https://github.com/micheldiemer/php-composer-mbstring/issues",
-                "source": "https://github.com/micheldiemer/php-composer-mbstring/tree/1.0.0-beta1"
+                "source": "https://github.com/micheldiemer/php-composer-mbstring/tree/1.0.0-beta4"
             },
-            "time": "2025-03-11T21:35:54+00:00"
+            "time": "2025-03-25T21:55:37+00:00"
         }
     ],
     "packages-dev": [],
